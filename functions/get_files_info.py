@@ -9,16 +9,16 @@ def get_files_info(working_directory, directory="."):
     if not os.path.isdir(abs_wk):
         return(f'Error: "{directory}" is not a directory')
 
-names_list = os.listdir(abs_wk)
-output_lines = []
+    names_list = os.listdir(abs_wk)
+    output_lines = []
 
-for item_name in names_list:
-    full_path = os.path.join(abs_wk, item_name)
-    size = os.path.getsize(full_path)
-    line = f"-{item_name}: file_size= {size} bytes, is_dir={os.path.isdir(full_path)}"
+    for item_name in names_list:
+        full_path = os.path.join(abs_wk, item_name)
+        size = os.path.getsize(full_path)
+        line = f"-{item_name}: file_size= {size} bytes, is_dir={os.path.isdir(full_path)}"
     
-    output_lines.append(line
+        output_lines.append(line
                         )
-final_output = "\n".join(output_lines)
+    final_output = "\n".join(output_lines)
 
-return(final_output)
+    return(final_output)
