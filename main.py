@@ -34,41 +34,43 @@ def main():
     messages = [
         types.Content(role="user", parts=[types.Part(text=user_prompt)]),
     ]
-
     generate_content(client, messages, verbose)
 
-
 def generate_content(client, messages, verbose):
-    response = client.models.generate_content(
-        model="gemini-2.0-flash-001",
-        contents=messages,
-        config=types.GenerateContentConfig(
-            tools=[available_functions], system_instruction=SYSTEM_PROMPT
-        ),
-    )
-    if verbose:
-        print("Prompt tokens:", response.usage_metadata.prompt_token_count)
-        print("Response tokens:", response.usage_metadata.candidates_token_count)
+    MAX_ITERATIONS = 20
 
-    if not response.function_calls:
-        print(response.text)  # Changed from return to print
-        return
+    for i in range(MAX_ITERATIONS):
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.0-flash-001",
+                contents=messages,
+                config=types.GenerateContentConfig(
+                    tools=[available_functions], system_instruction=SYSTEM_PROMPT
+                ),
+            )
 
-    for function_call_part in response.function_calls:
-        function_call_result = call_function(function_call_part, verbose)
-        if (
-            not function_call_result.parts
-            or not function_call_result.parts[0].function_response
-        ):
-            raise Exception("empty function call result")
-        if verbose:
-            print(f"-> {function_call_result.parts[0].function_response.response}")
-        else:
-            # Print the result even in non-verbose mode
-            result = function_call_result.parts[0].function_response.response.get("result", "")
-            if result:
-                print(result)
+            if verbose:
+                print("Prompt tokens:", response.usage_metadata.prompt_token_count)
+                print("Response tokens:", response.usage_metadata.candidates_token_count)    
 
+            final_response_obtained = False
+
+            if hasattr(response, 'text') and response.text:
+                print(response.text)
+                return
+                
+            for candidate in response.candidates:
+                messages.append(candidate.content)
+
+            if response.function_calls:
+                function_responses = []
+                for function_call_part in response.function_calls:
+                    function_call_result = call_function(function_call_part, verbose)
+                    function_responses.append(function_call_result.parts[0])
+
+                messages.append(types.Content(role="user", parts=function_responses))
+        except Exception as e:
+            print(f"Error during generate_content iteration {i}: {e}")
 
 if __name__ == "__main__":
     main()

@@ -26,7 +26,7 @@ def call_function(function_call_part, verbose=False):
     
     function_name = function_call_part.name
     args = dict(function_call_part.args)
-    args['working_directory'] = './calculator'
+    args['working_directory'] = '.'
 
     # Print debug info
     if verbose:
